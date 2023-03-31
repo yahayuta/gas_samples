@@ -2,8 +2,14 @@
 
 ## sheet_convert
 
-GASプログラミング スプシ内シートを別シート転記するデモ - YouTube
+GASプログラミング スプシ内シートを別シート転記するデモ - YouTube  
+https://www.youtube.com/watch?v=LnRaerQiShU&t=116s  
+こちらの動画で作成したソースコードになります  
 
-https://www.youtube.com/watch?v=LnRaerQiShU&t=116s
+## openai_web_app
 
-こちらの動画で作成したソースコードになります
+GASで作成したChatGPTライクな簡易Webアプリ  
+OpenAI APIをコールする  
+BigQueryにチャット履歴を保持する  
+
+
