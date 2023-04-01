@@ -23,6 +23,12 @@ function doGet(e) {
 function doPost(e) {
   Logger.log(e);
 
+  // reset histories
+  const reset = e.parameter.reset;
+  if (reset == "1") {
+    deleteChatAllLog();
+  }
+
   const all_logs = chatAllLog();
   const chat_seq = all_logs.chat_seq;
   const disp_log = all_logs.disp_log;
@@ -83,7 +89,7 @@ function getAppUrl() {
  */
 function makeInsert(chat, role) {
   const email = Session.getActiveUser().getEmail();
-  return `INSERT INTO app.openai_chat_log (user_id,chat,role,created) VALUES ('${email}','${chat}','${role}',CURRENT_DATETIME)`;
+  return `INSERT INTO app.openai_chat_log (user_id,chat,role,created) VALUES ('${email}','''${chat}''','${role}',CURRENT_DATETIME)`;
 }
 
 /**
@@ -123,4 +129,21 @@ function chatAllLog() {
   disp_log = disp_log　+ "</table>";
   return {"chat_seq":chat_seq, "disp_log":disp_log}
 }
+
+/**
+ * delete all chat logs
+ */
+function deleteChatAllLog() {
+  const email = Session.getActiveUser().getEmail();
+  var projectId = 'yahayuta';
+  var query = `DELETE FROM app.openai_chat_log WHERE user_id = '${email}'`;
+  var request = {
+    query: query,
+    useLegacySql: false
+  };
+
+  var queryResults = BigQuery.Jobs.query(request, projectId);
+  console.log(queryResults);
+}
+
 
