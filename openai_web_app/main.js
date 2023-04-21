@@ -24,26 +24,27 @@ function doGet(e) {
 function doPost(e) {
   Logger.log(e);
 
-  const all_logs = chatAllLog();
-  const chat_seq = all_logs.chat_seq;
-  const disp_log = all_logs.disp_log;
-
-  // load question
-  const question = e.parameter.question;
-
   // reset histories
-  if (question == "reset") {
+  const reset = e.parameter.reset;
+  if (reset == "1") {
     const email = Session.getActiveUser().getEmail();
-    let my_sheet = SpreadsheetApp.openById('1sbRQczrjQGhsa1Td22w1zK6oq8OwyeU6esaqO_It0oo').getSheetByName(email);
+    let my_sheet = book.getSheetByName(email);
     book.deleteSheet(my_sheet);
     let html = HtmlService.createTemplateFromFile('index');  
     html.question = "";
     const all_logs = chatAllLog();
     const disp_log = all_logs.disp_log;
     html.history = disp_log;
-    html.answer = "チャット履歴を削除しました";
+    html.answer = "delete all chat histories";
     return html.evaluate();
   }
+
+  const all_logs = chatAllLog();
+  const chat_seq = all_logs.chat_seq;
+  const disp_log = all_logs.disp_log;
+
+  // load question
+  const question = e.parameter.question;
 
   chat_seq.push({"role": "user", "content": question});
 
@@ -90,7 +91,7 @@ function getAppUrl() {
  */
 function makeInsert(chat, role) {
   const email = Session.getActiveUser().getEmail();
-  let my_sheet = SpreadsheetApp.openById('1sbRQczrjQGhsa1Td22w1zK6oq8OwyeU6esaqO_It0oo').getSheetByName(email);
+  let my_sheet = book.getSheetByName(email);
   if (!my_sheet) {
     my_sheet = book.insertSheet();
     my_sheet.setName(email);
@@ -104,7 +105,7 @@ function makeInsert(chat, role) {
  */
 function chatAllLog() {
   const email = Session.getActiveUser().getEmail();
-  let my_sheet = SpreadsheetApp.openById('1sbRQczrjQGhsa1Td22w1zK6oq8OwyeU6esaqO_It0oo').getSheetByName(email);
+  let my_sheet = book.getSheetByName(email);
   var chat_seq = [];
   let disp_log = "<table class=\"table table-striped table-bordered table-sm\"><tr><th>Sender</th><th>Message</th></tr>";
   if (!my_sheet) {
@@ -116,7 +117,7 @@ function chatAllLog() {
   Logger.log(values);
   for (value of values) {
       chat_seq.push({"role": value[1], "content": value[0]});
-      disp_log =　disp_log + "<tr><td>" +  value[1] + "</td><td>" + value[0] + "</td></tr>"
+      disp_log = disp_log + "<tr><td>" +  value[1] + "</td><td>" + value[0] + "</td></tr>"
   }
 
   return {"chat_seq":chat_seq, "disp_log":disp_log}
