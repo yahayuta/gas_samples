@@ -1,4 +1,5 @@
-let sheet = SpreadsheetApp.openById('1sbRQczrjQGhsa1Td22w1zK6oq8OwyeU6esaqO_It0oo').getSheetByName('config');
+let book = SpreadsheetApp.openById('1sbRQczrjQGhsa1Td22w1zK6oq8OwyeU6esaqO_It0oo');
+let sheet = book.getSheetByName('config');
 const OPENAI_API_KEY      = sheet.getRange("B1").getValue();
 
 /**
@@ -23,18 +24,27 @@ function doGet(e) {
 function doPost(e) {
   Logger.log(e);
 
-  // reset histories
-  const reset = e.parameter.reset;
-  if (reset == "1") {
-    deleteChatAllLog();
-  }
-
   const all_logs = chatAllLog();
   const chat_seq = all_logs.chat_seq;
   const disp_log = all_logs.disp_log;
 
   // load question
   const question = e.parameter.question;
+
+  // reset histories
+  if (question == "reset") {
+    const email = Session.getActiveUser().getEmail();
+    let my_sheet = SpreadsheetApp.openById('1sbRQczrjQGhsa1Td22w1zK6oq8OwyeU6esaqO_It0oo').getSheetByName(email);
+    book.deleteSheet(my_sheet);
+    let html = HtmlService.createTemplateFromFile('index');  
+    html.question = "";
+    const all_logs = chatAllLog();
+    const disp_log = all_logs.disp_log;
+    html.history = disp_log;
+    html.answer = "チャット履歴を削除しました";
+    return html.evaluate();
+  }
+
   chat_seq.push({"role": "user", "content": question});
 
   var params = {
@@ -58,17 +68,8 @@ function doPost(e) {
   const answer = json.choices[0].message.content;
 
   // record ai chat log
-  var projectId = 'yahayuta';
-  queryResults = BigQuery.Jobs.query({
-    useLegacySql: false,
-    query: makeInsert(question, "user")
-  }, projectId);
-  console.log(queryResults);
-  queryResults = BigQuery.Jobs.query({
-    useLegacySql: false,
-    query: makeInsert(answer, "assistant")
-  }, projectId);
-  console.log(queryResults);
+  makeInsert(question, "user");
+  makeInsert(answer, "assistant");
 
   let html = HtmlService.createTemplateFromFile('index');  
   html.question = question;
@@ -89,7 +90,13 @@ function getAppUrl() {
  */
 function makeInsert(chat, role) {
   const email = Session.getActiveUser().getEmail();
-  return `INSERT INTO app.openai_chat_log (user_id,chat,role,created) VALUES ('${email}','''${chat}''','${role}',CURRENT_DATETIME)`;
+  let my_sheet = SpreadsheetApp.openById('1sbRQczrjQGhsa1Td22w1zK6oq8OwyeU6esaqO_It0oo').getSheetByName(email);
+  if (!my_sheet) {
+    my_sheet = book.insertSheet();
+    my_sheet.setName(email);
+  }
+  let row = [chat, role];
+  my_sheet.appendRow(row);
 }
 
 /**
@@ -97,53 +104,24 @@ function makeInsert(chat, role) {
  */
 function chatAllLog() {
   const email = Session.getActiveUser().getEmail();
-  var projectId = 'yahayuta';
-  var query = `SELECT role, chat FROM app.openai_chat_log WHERE user_id = '${email}' order by created`;
-  var request = {
-    query: query,
-    useLegacySql: false
-  };
-
-  var queryResults = BigQuery.Jobs.query(request, projectId);
-  var jobId = queryResults.jobReference.jobId;
-
-  // Wait for query to complete
-  while (!queryResults.jobComplete) {
-    Utilities.sleep(1000);
-    queryResults = BigQuery.Jobs.getQueryResults(projectId, jobId);
-  }
-
-  // Get results
-  var rows = queryResults.rows;
+  let my_sheet = SpreadsheetApp.openById('1sbRQczrjQGhsa1Td22w1zK6oq8OwyeU6esaqO_It0oo').getSheetByName(email);
   var chat_seq = [];
   let disp_log = "<table class=\"table table-striped table-bordered table-sm\"><tr><th>Sender</th><th>Message</th></tr>";
-
-  if (rows) {
-    for (var i = 0; i < rows.length; i++) {
-      var row = rows[i];
-      chat_seq.push({"role": row.f[0].v, "content": row.f[1].v});
-      disp_log =　disp_log + "<tr><td>" +  row.f[0].v + "</td><td>" + row.f[1].v + "</td></tr>"
-    }
+  if (!my_sheet) {
+    return {"chat_seq":chat_seq, "disp_log":disp_log}
   }
 
-  disp_log = disp_log　+ "</table>";
+  const range = my_sheet.getDataRange();
+  const values = range.getValues();
+  Logger.log(values);
+  for (value of values) {
+      chat_seq.push({"role": value[1], "content": value[0]});
+      disp_log =　disp_log + "<tr><td>" +  value[1] + "</td><td>" + value[0] + "</td></tr>"
+  }
+
   return {"chat_seq":chat_seq, "disp_log":disp_log}
 }
 
-/**
- * delete all chat logs
- */
-function deleteChatAllLog() {
-  const email = Session.getActiveUser().getEmail();
-  var projectId = 'yahayuta';
-  var query = `DELETE FROM app.openai_chat_log WHERE user_id = '${email}'`;
-  var request = {
-    query: query,
-    useLegacySql: false
-  };
 
-  var queryResults = BigQuery.Jobs.query(request, projectId);
-  console.log(queryResults);
-}
 
 
