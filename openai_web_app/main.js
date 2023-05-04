@@ -109,6 +109,7 @@ function chatAllLog() {
   var chat_seq = [];
   let disp_log = "<table class=\"table table-striped table-bordered table-sm\"><tr><th>Sender</th><th>Message</th></tr>";
   if (!my_sheet) {
+    disp_log = disp_log + "</table>"
     return {"chat_seq":chat_seq, "disp_log":disp_log}
   }
 
@@ -121,7 +122,7 @@ function chatAllLog() {
   }
 
   disp_log = disp_log + "</table>"
-  
+
   return {"chat_seq":chat_seq, "disp_log":disp_log}
 }
 
