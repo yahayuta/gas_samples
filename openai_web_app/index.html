@@ -9,11 +9,11 @@
     <form method="post" action="<?= getAppUrl() ?>">
       <div><h1>ChatGPT Question Form</h1></div>
       <div><h2>Question</h2></div>
-      <div><textarea name="question" rows="10" class="form-control" ><?!= question ?></textarea></div>
+      <div><textarea name="question" rows="2" class="form-control" ><?!= question ?></textarea></div>
       <div><input type="submit" value="Send Question" class="btn btn-secondary"></div>
       <div><input type="checkbox" name="reset" value="1">Reset History</div>
       <div><h2>Answer</h2></div>
-      <div><textarea name="answer" rows="10" class="form-control" ><?!= answer ?></textarea></div>
+      <div><textarea name="answer" rows="2" class="form-control" ><?!= answer ?></textarea></div>
       <div><h2>Chat history</h2></div>
       <div><?!= history ?></div>
     </form>
