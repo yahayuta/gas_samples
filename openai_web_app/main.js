@@ -120,6 +120,8 @@ function chatAllLog() {
       disp_log = disp_log + "<tr><td>" +  value[1] + "</td><td>" + value[0] + "</td></tr>"
   }
 
+  disp_log = disp_log + "</table>"
+  
   return {"chat_seq":chat_seq, "disp_log":disp_log}
 }
 
